@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"math/rand"
 	"net/http"
 	"net/url"
 	"regexp"
@@ -70,7 +71,7 @@ func (s *Manager) DaysRemaining() float64 {
 func (s *Manager) BackgroundRoutine() {
 	lastPost := time.Now()
 	for {
-		time.Sleep(time.Second / 2)
+		time.Sleep(time.Minute / 2)
 		if s.NeedFB() || s.NeedGroup() {
 			continue
 		}
@@ -90,6 +91,8 @@ func (s *Manager) BackgroundRoutine() {
 }
 
 func (s *Manager) postScramble() {
+	rand.Seed(time.Now().UnixNano())
+
 	log.Println("Posting scramble...")
 
 	s.lock.RLock()
@@ -112,7 +115,11 @@ func (s *Manager) postScramble() {
 BetterLoop:
 	for {
 		select {
-		case solution = <-solver.Solutions():
+		case sol, ok := <-solver.Solutions():
+			if !ok {
+				break BetterLoop
+			}
+			solution = sol
 		case <-timeout:
 			break BetterLoop
 		}
