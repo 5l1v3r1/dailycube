@@ -20,21 +20,23 @@ var Store = sessions.NewCookieStore(securecookie.GenerateRandomKey(16),
 var MainManager Manager
 var ClientID string
 var Secret string
-var CallbackURI = "http://localhost:8599/fblogin_done"
+var CallbackURI string
 
 func main() {
 	go MainManager.BackgroundRoutine()
 
-	if len(os.Args) != 5 {
-		fmt.Fprintln(os.Stderr, "Usage: dailycube <admin_password> <client ID> <secret> <port>")
+	if len(os.Args) != 6 {
+		fmt.Fprintln(os.Stderr, "Usage: dailycube <admin_password> <client ID> <secret> <port> "+
+			"<callback URI>")
 		os.Exit(1)
 	}
 
 	AdminPassword = os.Args[1]
 	ClientID = os.Args[2]
 	Secret = os.Args[3]
+	CallbackURI = os.Args[4]
 
-	if _, err := strconv.Atoi(os.Args[4]); err != nil {
+	if _, err := strconv.Atoi(os.Args[5]); err != nil {
 		fmt.Fprintln(os.Stderr, "Invalid port:", os.Args[2])
 		os.Exit(1)
 	}
@@ -46,7 +48,7 @@ func main() {
 	http.HandleFunc("/reset", HandleReset)
 	http.HandleFunc("/", HandleRoot)
 
-	http.ListenAndServe(":"+os.Args[4], nil)
+	http.ListenAndServe(":"+os.Args[5], nil)
 }
 
 func HandleLogin(w http.ResponseWriter, r *http.Request) {
