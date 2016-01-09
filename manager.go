@@ -135,7 +135,7 @@ BetterLoop:
 	u := "https://graph.facebook.com/v2.5/" + s.GroupID + "/feed"
 	values := url.Values{}
 	values.Set("access_token", s.AccessToken)
-	values.Set("message", "Scramble of the day: "+solutionStr)
+	values.Set("message", "Scramble of the day:\n"+solutionStr)
 	resp, _ := http.PostForm(u, values)
 	if resp != nil {
 		resp.Body.Close()
