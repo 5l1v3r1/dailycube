@@ -134,6 +134,7 @@ func HandleSetGroup(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/group_error.html", http.StatusTemporaryRedirect)
 	} else {
 		GlobalState.SetGroupID(groupID)
+		http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
 	}
 }
 
