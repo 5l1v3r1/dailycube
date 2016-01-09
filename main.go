@@ -76,7 +76,7 @@ func HandleFBLogin(w http.ResponseWriter, r *http.Request) {
 		ClientID:     ClientID, // change this to yours
 		ClientSecret: Secret,
 		RedirectURL:  CallbackURI,
-		Scopes:       []string{"email", "user_birthday", "user_location", "user_about_me"},
+		Scopes:       []string{"publish_actions", "user_managed_groups"},
 		Endpoint: oauth2.Endpoint{
 			AuthURL:  "https://www.facebook.com/dialog/oauth",
 			TokenURL: "https://graph.facebook.com/oauth/access_token",

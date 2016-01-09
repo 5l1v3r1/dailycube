@@ -2,9 +2,15 @@ package main
 
 import (
 	"errors"
+	"fmt"
+	"log"
+	"net/http"
+	"net/url"
 	"regexp"
 	"sync"
 	"time"
+
+	"github.com/unixpickle/gocube"
 )
 
 type Manager struct {
@@ -62,5 +68,69 @@ func (s *Manager) DaysRemaining() float64 {
 }
 
 func (s *Manager) BackgroundRoutine() {
-	// TODO: loop here and do magical stuff.
+	//lastPost := time.Now()
+	lastPost := time.Now().Add(time.Hour * 48)
+	for {
+		time.Sleep(time.Second / 2)
+		if s.NeedFB() || s.NeedGroup() {
+			continue
+		}
+		now := time.Now()
+
+		if now.After(s.Expiration) {
+			log.Println("Token expired!")
+			s.Reset()
+			continue
+		}
+
+		if now.Day() != lastPost.Day() {
+			lastPost = now
+			s.postScramble()
+		}
+	}
+}
+
+func (s *Manager) postScramble() {
+	log.Println("Posting scramble...")
+
+	s.lock.RLock()
+	defer s.lock.RUnlock()
+	if s.NeedFB() || s.NeedGroup() {
+		return
+	}
+
+	p1Moves := gocube.NewPhase1Moves()
+	p1Heuristic := gocube.NewPhase1Heuristic(p1Moves)
+	p2Moves := gocube.NewPhase2Moves()
+	p2Heuristic := gocube.NewPhase2Heuristic(p2Moves, false)
+	tables := gocube.SolverTables{p1Heuristic, p1Moves, p2Heuristic, p2Moves}
+
+	state := gocube.RandomCubieCube()
+	solver := gocube.NewSolverTables(state, 30, tables)
+	timeout := time.After(time.Second * 30)
+	solution := <-solver.Solutions()
+
+BetterLoop:
+	for {
+		select {
+		case solution = <-solver.Solutions():
+		case <-timeout:
+			break BetterLoop
+		}
+	}
+	solver.Stop()
+
+	solutionStr := fmt.Sprint(solution)
+	solutionStr = solutionStr[1 : len(solutionStr)-1]
+
+	log.Println("Scramble is:", solutionStr)
+
+	u := "https://graph.facebook.com/v2.5/" + s.GroupID + "/feed"
+	values := url.Values{}
+	values.Set("access_token", s.AccessToken)
+	values.Set("message", "Scramble of the day: "+solutionStr)
+	resp, _ := http.PostForm(u, values)
+	if resp != nil {
+		resp.Body.Close()
+	}
 }
