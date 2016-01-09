@@ -68,8 +68,7 @@ func (s *Manager) DaysRemaining() float64 {
 }
 
 func (s *Manager) BackgroundRoutine() {
-	//lastPost := time.Now()
-	lastPost := time.Now().Add(time.Hour * 48)
+	lastPost := time.Now()
 	for {
 		time.Sleep(time.Second / 2)
 		if s.NeedFB() || s.NeedGroup() {
