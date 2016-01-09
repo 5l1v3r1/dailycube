@@ -95,12 +95,6 @@ func (s *Manager) postScramble() {
 
 	log.Println("Posting scramble...")
 
-	s.lock.RLock()
-	defer s.lock.RUnlock()
-	if s.NeedFB() || s.NeedGroup() {
-		return
-	}
-
 	p1Moves := gocube.NewPhase1Moves()
 	p1Heuristic := gocube.NewPhase1Heuristic(p1Moves)
 	p2Moves := gocube.NewPhase2Moves()
@@ -130,6 +124,13 @@ BetterLoop:
 	solutionStr = solutionStr[1 : len(solutionStr)-1]
 
 	log.Println("Scramble is:", solutionStr)
+
+	s.lock.RLock()
+	defer s.lock.RUnlock()
+
+	if s.NeedFB() || s.NeedGroup() {
+		return
+	}
 
 	u := "https://graph.facebook.com/v2.5/" + s.GroupID + "/feed"
 	values := url.Values{}
