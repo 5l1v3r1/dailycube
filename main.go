@@ -134,7 +134,11 @@ func HandleRoot(w http.ResponseWriter, r *http.Request) {
 		} else if MainManager.NeedGroup() {
 			http.ServeFile(w, r, "assets/need_group.html")
 		} else {
-			http.ServeFile(w, r, "assets/running.html")
+			contents, _ := ioutil.ReadFile("assets/running.html")
+			page := strings.Replace(string(contents), "%DAYS%",
+				fmt.Sprintf("%f", MainManager.DaysRemaining()), 1)
+			w.Header().Set("Content-Type", "text/html")
+			w.Write([]byte(page))
 		}
 		return
 	}

@@ -55,6 +55,12 @@ func (s *Manager) Reset() {
 	s.Expiration = time.Time{}
 }
 
+func (s *Manager) DaysRemaining() float64 {
+	s.lock.RLock()
+	defer s.lock.RUnlock()
+	return float64(s.Expiration.UnixNano()-time.Now().UnixNano()) / float64(1E9*60*60*24)
+}
+
 func (s *Manager) BackgroundRoutine() {
 	// TODO: loop here and do magical stuff.
 }
