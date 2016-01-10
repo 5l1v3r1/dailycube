@@ -1,14 +1,18 @@
 package main
 
 import (
+	"bytes"
 	"fmt"
+	"image/png"
 	"log"
 	"math/rand"
+	"mime/multipart"
 	"net/http"
-	"net/url"
+	"os"
 	"time"
 
 	"github.com/unixpickle/gocube"
+	"github.com/unixpickle/rubiksimg"
 )
 
 // PostLoop runs forever, checking if the day changes and
@@ -52,11 +56,19 @@ func postScramble(s *State, scramble []gocube.Move) {
 		return
 	}
 	log.Println("Posting scramble:", scramble)
-	u := "https://graph.facebook.com/v2.5/" + groupID + "/feed"
-	values := url.Values{}
-	values.Set("access_token", token)
-	values.Set("message", messageForScramble(scramble))
-	resp, _ := http.PostForm(u, values)
+	u := "https://graph.facebook.com/v2.5/" + groupID + "/photos?access_token=" + token
+
+	body := &bytes.Buffer{}
+	writer := multipart.NewWriter(body)
+	part, _ := writer.CreateFormFile("source", "cube.png")
+	part.Write(imageForScramble(scramble))
+	writer.WriteField("message", messageForScramble(scramble))
+	writer.Close()
+
+	req, _ := http.NewRequest("POST", u, body)
+	req.Header.Add("Content-Type", writer.FormDataContentType())
+	client := http.Client{}
+	resp, _ := client.Do(req)
 	if resp != nil {
 		resp.Body.Close()
 	}
@@ -102,4 +114,23 @@ func messageForScramble(scramble []gocube.Move) string {
 	solutionStr := fmt.Sprint(scramble)
 	solutionStr = solutionStr[1 : len(solutionStr)-1]
 	return "Scramble of the day:\n" + solutionStr
+}
+
+func imageForScramble(scramble []gocube.Move) []byte {
+	cube := gocube.SolvedCubieCube()
+	moves, err := gocube.ParseMoves(os.Args[2])
+	if err != nil {
+		fmt.Fprintln(os.Stderr, "Invalid scramble.")
+		os.Exit(1)
+	}
+	for _, move := range moves {
+		cube.Move(move)
+	}
+
+	stickers := cube.StickerCube()
+	image := rubiksimg.GenerateImage(666, stickers)
+
+	var output bytes.Buffer
+	png.Encode(&output, image)
+	return output.Bytes()
 }
