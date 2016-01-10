@@ -8,7 +8,6 @@ import (
 	"math/rand"
 	"mime/multipart"
 	"net/http"
-	"os"
 	"time"
 
 	"github.com/unixpickle/gocube"
@@ -118,12 +117,7 @@ func messageForScramble(scramble []gocube.Move) string {
 
 func imageForScramble(scramble []gocube.Move) []byte {
 	cube := gocube.SolvedCubieCube()
-	moves, err := gocube.ParseMoves(os.Args[2])
-	if err != nil {
-		fmt.Fprintln(os.Stderr, "Invalid scramble.")
-		os.Exit(1)
-	}
-	for _, move := range moves {
+	for _, move := range scramble {
 		cube.Move(move)
 	}
 
