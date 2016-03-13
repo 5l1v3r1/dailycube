@@ -110,9 +110,7 @@ func scrambleGenerator() <-chan []gocube.Move {
 }
 
 func messageForScramble(scramble []gocube.Move) string {
-	solutionStr := fmt.Sprint(scramble)
-	solutionStr = solutionStr[1 : len(solutionStr)-1]
-	return "Scramble of the day:\n" + solutionStr
+	return "Scramble of the day:\n" + stringForScramble(scramble)
 }
 
 func imageForScramble(scramble []gocube.Move) []byte {
@@ -122,9 +120,15 @@ func imageForScramble(scramble []gocube.Move) []byte {
 	}
 
 	stickers := cube.StickerCube()
-	image := rubiksimg.GenerateImage(666, stickers)
+	caption := stringForScramble(scramble)
+	image := rubiksimg.GenerateCaptionedImage(666, 33, caption, stickers)
 
 	var output bytes.Buffer
 	png.Encode(&output, image)
 	return output.Bytes()
+}
+
+func stringForScramble(scramble []gocube.Move) string {
+	solutionStr := fmt.Sprint(scramble)
+	return solutionStr[1 : len(solutionStr)-1]
 }
