@@ -61,7 +61,7 @@ func postScramble(s *State, scramble []gocube.Move) {
 	writer := multipart.NewWriter(body)
 	part, _ := writer.CreateFormFile("source", "cube.png")
 	part.Write(imageForScramble(scramble))
-	writer.WriteField("message", messageForScramble(scramble))
+	writer.WriteField("caption", messageForScramble(scramble))
 	writer.Close()
 
 	req, _ := http.NewRequest("POST", u, body)
